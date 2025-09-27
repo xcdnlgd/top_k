@@ -34,7 +34,7 @@ async fn main() {
         let file_path = file_path.clone();
         let handle = task::spawn(async move {
             println!("thread{i} start");
-            let min_heap = get_top_k(k, &file_path, start, end).await;
+            let min_heap = get_top_k(k, &file_path, start, end);
             println!("thread{i} finished");
             min_heap
         });

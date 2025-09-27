@@ -1,17 +1,10 @@
-use std::io::SeekFrom;
-
+use std::{fs::File, io::{BufReader, Read, Seek, SeekFrom}};
 use calc_tokio::heap::MinHeap;
-use tokio::{
-    fs::File,
-    io::{AsyncReadExt, AsyncSeekExt, BufReader},
-};
 
-pub async fn get_top_k(k: usize, file_path: &str, start: u64, end: u64) -> MinHeap<f64> {
+pub fn get_top_k(k: usize, file_path: &str, start: u64, end: u64) -> MinHeap<f64> {
     let mut file = File::open(file_path)
-        .await
         .unwrap_or_else(|_| panic!("Cannot open {file_path} for reading"));
     file.seek(SeekFrom::Start(start))
-        .await
         .unwrap_or_else(|_| panic!("Fail to seek to {start}"));
     let mut file = BufReader::new(file);
     let mut min_heap: MinHeap<f64> = MinHeap::new();
@@ -20,7 +13,7 @@ pub async fn get_top_k(k: usize, file_path: &str, start: u64, end: u64) -> MinHe
     println!("num: {num_of_numbers}");
 
     for _ in 0..num_of_numbers {
-        if file.read_exact(&mut buffer).await.is_err() {
+        if file.read_exact(&mut buffer).is_err() {
             break;
         }
         let num = f64::from_le_bytes(buffer);
