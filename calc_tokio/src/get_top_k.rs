@@ -19,28 +19,18 @@ pub async fn get_top_k(k: usize, file_path: &str, start: u64, end: u64) -> MinHe
     let num_of_numbers = (end - start) / 8;
     println!("num: {num_of_numbers}");
 
-    while min_heap.len() < k {
+    for _ in 0..num_of_numbers {
         if file.read_exact(&mut buffer).await.is_err() {
-            return min_heap;
+            break;
         }
         let num = f64::from_le_bytes(buffer);
-        min_heap.insert(num);
-    } // read first k numbers
-
-    let mut count: u64 = k as u64;
-
-    // while count < num_of_numbers {
-    //     file.read_exact(&mut buffer).expect(&format!("Wrong calculation lead to reading failure, count={count}"));
-    while file.read_exact(&mut buffer).await.is_ok() {
-        count += 1;
-        let num = f64::from_le_bytes(buffer);
-        if num > *min_heap.get_root().unwrap() {
+        if min_heap.len() < k {
+            min_heap.insert(num);
+        }
+        else if num > *min_heap.get_root().unwrap() {
             min_heap.pop();
             min_heap.insert(num);
         }
-        if count == num_of_numbers {
-            break;
-        }
-    } // process rest numbers
+    }
     min_heap
 }
