@@ -1,12 +1,13 @@
 mod get_top_k;
 use calc_tokio::heap::MinHeap;
 use get_top_k::get_top_k;
-use std::{env::args, process::exit};
-use tokio::{
+use std::{
+    env::args,
     fs::File,
-    io::{AsyncWriteExt, BufWriter},
-    task,
+    io::{BufWriter, Write},
+    process::exit,
 };
+use tokio::task;
 
 #[tokio::main]
 async fn main() {
@@ -14,8 +15,8 @@ async fn main() {
     let k = 100;
 
     let file_path = args().nth(1).expect("Please enter the file name");
-    let file = File::open(&file_path).await.expect("Fail to read");
-    let file_size: u64 = file.metadata().await.expect("Cannot get metadata").len();
+    let file = File::open(&file_path).expect("Fail to read");
+    let file_size: u64 = file.metadata().expect("Cannot get metadata").len();
     if file_size % 8 != 0 {
         panic!("File size is not multiple of 8, invalid f64 sequence");
     }
@@ -55,14 +56,13 @@ async fn main() {
             }
         }
     }
-    save_and_exit(&mut min_heap).await;
+    save_and_exit(&mut min_heap);
 }
 
-async fn save_and_exit(min_heap: &mut MinHeap<f64>) {
+fn save_and_exit(min_heap: &mut MinHeap<f64>) {
     let file_path = "result";
-    let file = File::create(file_path)
-        .await
-        .unwrap_or_else(|_| panic!("Cannot open {file_path} for reading"));
+    let file =
+        File::create(file_path).unwrap_or_else(|_| panic!("Cannot open {file_path} for reading"));
     let mut file = BufWriter::new(file);
 
     let mut result = min_heap.as_vec().clone();
@@ -70,9 +70,8 @@ async fn save_and_exit(min_heap: &mut MinHeap<f64>) {
     for num in result {
         let bytes = num.to_le_bytes();
         file.write_all(&bytes)
-            .await
             .unwrap_or_else(|_| panic!("Fail to write {num} when saving"));
     }
-    file.flush().await.expect("Fail to flush");
+    file.flush().expect("Fail to flush");
     exit(0);
 }
